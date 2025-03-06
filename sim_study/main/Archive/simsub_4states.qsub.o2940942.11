@@ -1,0 +1,29 @@
+
+Attaching package: 'dplyr'
+
+The following objects are masked from 'package:stats':
+
+    filter, lag
+
+The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: 'data.table'
+
+The following objects are masked from 'package:dplyr':
+
+    between, first, last
+
+
+Attaching package: 'combinat'
+
+The following object is masked from 'package:utils':
+
+    combn
+
+
+real	325m52.093s
+user	321m35.899s
+sys	1m22.273s

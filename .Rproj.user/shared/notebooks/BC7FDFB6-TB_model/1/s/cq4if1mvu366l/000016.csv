@@ -1,0 +1,4 @@
+"0","```r
+
+ggplot(data=res2) + geom_line(aes(x=time, y=sus.inf)) + geom_line(aes(x=time, y=reinf))
+```"

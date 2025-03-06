@@ -1,0 +1,66 @@
+"0","```r
+
+ari2 = aris$ari/100
+
+#prevalence
+prev2=aris$prev/100000
+#pop size
+pop=1000000
+#mortality
+m=.005
+
+
+res <- data.frame(ari=NA, dis.prev=NA, duration = NA, inf.prev=NA)
+
+for(i in 1:dim(aris)[1]){
+ari=ari2[i]
+prev = prev2[i]
+inf.new = pop*((1-prev)*(ari))
+inf.1yr = inf.new*(1-.025)*(1-m)*(1-ari)
+inf.2yr = inf.new*(1-.025)*(1-.01)*((1-m)^2)*((1-ari)^2)
+inf.3yr = inf.new*(1-.025)*(1-.01)*(1-.005)*((1-m)^3)*((1-ari)^3)
+inf.4yr = inf.new*(1-.025)*(1-.01)*((1-.005)^2)*((1-m)^4)*((1-ari)^4)
+inf.5yr = inf.new*(1-.025)*(1-.01)*((1-.005)^3)*((1-m)^5)*((1-ari)^5)
+
+#inf.dyr = pop*(1-prev)*(ari)*(1-.025)*(1-.01)*((1-.005)^4)*((1-0.00075)^d)*((1-m)^d)*((1-ari)^d)
+
+#distribution of infection duration
+inf.dur = data.frame(ari=NA, dis.prev=NA,duration=c(0:100), inf.prev=NA)
+inf.dur[1:6,4] <- c(inf.new, inf.1yr, inf.2yr, inf.3yr, inf.4yr, inf.5yr )
+for(d in 6:100){
+inf.dur[d+1,4] <- pop*(1-prev)*(ari)*(1-.025)*(1-.01)*((1-.005)^4)*((1-0.00075)^(d-6))*((1-m)^d)*((1-ari)^d)
+}
+inf.dur$ari=ari
+inf.dur$dis.prev=prev
+res <- rbind(res, inf.dur) %>% na.omit()
+}
+
+#overall infection prevalence by ari and prev
+inf.prev = res %>% group_by(ari, dis.prev) %>% summarise(inf.prev=sum(inf.prev))
+
+inf.prev$uninfected <- 1000000 - inf.prev$inf.prev - (inf.prev$dis.prev*1000000)
+inf.prev$new <- inf.prev$ari*inf.prev$uninfected
+inf.prev$re <- inf.prev$ari*inf.prev$inf.prev
+inf.prev$tot = inf.prev$re + inf.prev$new
+inf.prev$tot/(inf.prev$inf.prev+ inf.prev$uninfected)
+```"
+"1"," [1] 0.0090 0.0127 0.0163 0.0200 0.0236 0.0272 0.0310 0.0346 0.0383 0.0420
+"
+"0","```r
+inf.prev$tot/inf.prev$dis.prev
+```"
+"1"," [1] 8991000.000 6337300.000 5417033.333 4980000.000 4696400.000 4506133.333 4397571.429 4290400.000 4217255.556 4158000.000
+"
+"0","```r
+inf.prev$new/inf.prev$uninfected
+```"
+"1"," [1] 0.0090 0.0127 0.0163 0.0200 0.0236 0.0272 0.0310 0.0346 0.0383 0.0420
+"
+"0","```r
+inf.prev$re/inf.prev$inf.prev
+```"
+"1"," [1] 0.0090 0.0127 0.0163 0.0200 0.0236 0.0272 0.0310 0.0346 0.0383 0.0420
+"
+"0","```r
+ggplot(data = res) + geom_line(aes(x=duration, y=inf.prev/pop), size=1) + ylab(\"Freq\") + xlab(\"Age of most recent infection\") + facet_wrap(dis.prev~ari)
+```"

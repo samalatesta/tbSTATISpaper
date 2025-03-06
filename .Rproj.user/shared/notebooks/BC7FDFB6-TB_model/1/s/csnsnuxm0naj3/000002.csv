@@ -1,0 +1,13 @@
+"0","```r
+dis.progress <- inf.prev2
+
+dis.progress$prog2tb <- ifelse(dis.progress$group==\"New\", dis.progress$inf.prev*0.025, ifelse(dis.progress$group==\"1\", dis.progress$inf.prev*.01, ifelse(dis.progress$group==\"2-5\", dis.progress$inf.prev*.005, ifelse(dis.progress$group==\"> 5\", dis.progress$inf.prev*.00075, NA) ) ) )
+
+new.dis = dis.progress %>% group_by(ari, dis.prev) %>% summarise(prog2tb=sum(prog2tb), inf.prev=sum(inf.prev)) 
+
+new.dis$dis.dur = (new.dis$dis.prev*1000000)/new.dis$prog2tb
+
+new.dis2 = dis.progress %>% group_by(ari, dis.prev, group) %>% summarise(prog2tb=sum(prog2tb))
+
+ggplot(data=new.dis2) + geom_line(aes(x=dis.prev*1000000, y=prog2tb, color=group)) +ylab(\"# Progress to Disease\") +xlab(\"# Disease\") + geom_line(data=new.dis,aes(x=dis.prev*1000000, y=prog2tb))  + scale_color_discrete(name=\"Age of most recent infection\")
+```"

@@ -1,0 +1,4 @@
+"0","```r
+
+ggplot(data=pop.change)  + geom_line(aes(x=time, y=dths), color=\"green\") + ggtitle(\"Deaths over time\") 
+```"

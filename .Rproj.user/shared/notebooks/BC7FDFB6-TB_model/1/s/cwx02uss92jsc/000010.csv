@@ -1,0 +1,7 @@
+"0","```r
+
+inf.prev$disease <- inf.prev$dis.prev*1000000
+
+inf.prev$ratio <- inf.prev$inf.prev/inf.prev$disease
+
+```"

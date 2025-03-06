@@ -1,0 +1,4 @@
+"0","```r
+test <- model7(dis.prob, input.age, input)
+head(test) %>% kable() %>% kable_styling()
+```"

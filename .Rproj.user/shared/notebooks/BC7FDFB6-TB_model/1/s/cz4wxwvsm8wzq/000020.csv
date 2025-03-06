@@ -1,0 +1,8 @@
+"0","```r
+aris$ari_par=aris$ari/100
+aris$prev2 <- aris$prev
+sub <- aris %>% select(ari_par, prev2)
+tmax2 <- dplyr::left_join(tmax, sub, by=\"ari_par\")
+
+ggplot(data=tmax2) + geom_line(aes(x=cure.rt_par, y=prev*100000, color=factor(ari_par)))  + geom_line(aes(x=cure.rt_par, y=prev2)) + facet_wrap(~factor(ari_par))+ xlab(\"Treatment Rate\") + ylab(\"Disease/100000\") + scale_color_discrete(name=\"ARI\")
+```"

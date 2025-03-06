@@ -1,0 +1,6 @@
+"0","```r
+
+
+
+ggplot(data=prog) + geom_line(aes(x=ari, y=ratio_inc, color=\"Us (avg disease dur= 3 yrs)\")) + geom_line(aes(x=ari, y=ratio_inc2, color=\"Us (avg disease dur= 2 yrs)\")) + ylab(\"Incident infections/smear positive case/1 year\") + geom_line(aes(x=ari, y=((1000000-(dodd_prev*10))*prog$ari)/(prog$dodd_prev*10), color=\"Dodd et al\")) + xlab(\"ARI\") + geom_point(data=dat,aes(x=ari/100, y=(ari*1000)/tbprev))
+```"

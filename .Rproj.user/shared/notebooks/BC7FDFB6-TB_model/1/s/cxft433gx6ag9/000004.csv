@@ -1,0 +1,4 @@
+"0","```r
+
+pop.change %>% kable(col.names = c(\"time\", \"total population\", \"total deaths\", \"Age 0-4 pop\", \"Age 0-4 move forward\", \"Age 0-4 deaths\"))%>% kable_styling()
+```"

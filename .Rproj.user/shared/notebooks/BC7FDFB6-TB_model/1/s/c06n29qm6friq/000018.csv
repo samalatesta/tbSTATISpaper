@@ -1,0 +1,7 @@
+"0","```r
+
+#check ages 
+ages <- test %>% dplyr::filter(time==1 | time==max(time))
+
+ggplot(data=ages) + geom_point(aes(x=Age, y=tot.pop, fill=time))
+```"

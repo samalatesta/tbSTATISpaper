@@ -1,0 +1,206 @@
+"0","```r
+
+####model inputs 
+
+#Probability of progression to disease 
+dis.prob <- c(0.025,0.01,rep(0.005,4),0.00075)
+
+#inputs that depend on age 
+#population data from Phillipines collapsed to same age categories as Tupasi data and add TB inf prev from paper
+#combine Tupasi and Phillipines WHO data
+phil2 <- cbind(age_init, inf.prev = tupasi2$inf.prev[1:18])
+input.age <- phil2
+
+#model inputs that do not depend on age 
+input <- data.frame( tx.cure.rate=.5, start.pop=1000000, ari=.025, old.inf.prop=.5, steps=15 , self.cure.rate = .05, tb.dth.rate=.05, births=20000)
+
+model2 <- function(disease_progression, age_dist, inputs){
+#data frame that will be updated each year, requires age specific population proportions, death rates, and infection prevalences
+sim.pop <- input.age 
+
+#loop across all years 
+for(i in 1:input$steps){
+
+#year 1 (do this separately from all other years)
+if(i==1){
+
+#save time step 
+sim.pop$time <- 1
+
+#calculate number of people in each age group given total pop size and target age distribution 
+
+#calculate total infections by age 
+sim.pop$tot.inf <- sim.pop$pop*sim.pop$inf.prev
+
+#calculate new infections
+sim.pop$new.inf <- sim.pop$pop*input$ari
+
+#calculate old infections 
+sim.pop$old.inf <- sim.pop$tot.inf*input$old.inf.prop
+#sim.pop$old.inf[1] <- 0
+
+#calculate 1-5 yr infections 
+sim.pop$inf.1yr <- (sim.pop$tot.inf-sim.pop$new.inf-sim.pop$old.inf)/5
+sim.pop$inf.2yr <- (sim.pop$tot.inf-sim.pop$new.inf-sim.pop$old.inf)/5
+sim.pop$inf.3yr <- (sim.pop$tot.inf-sim.pop$new.inf-sim.pop$old.inf)/5
+sim.pop$inf.4yr <- (sim.pop$tot.inf-sim.pop$new.inf-sim.pop$old.inf)/5
+sim.pop$inf.5yr <- (sim.pop$tot.inf-sim.pop$new.inf-sim.pop$old.inf)/5
+
+#calculate uninfected 
+sim.pop$uninf <- sim.pop$pop - sim.pop$tot.inf
+
+#calculate deaths for newly infected
+sim.pop$dths.new.inf <-sim.pop$mortality*sim.pop$new.inf
+
+#calculate deaths for 1-5 yr infections
+sim.pop$dths.inf.1yr <-sim.pop$mortality*sim.pop$inf.1yr
+sim.pop$dths.inf.2yr <-sim.pop$mortality*sim.pop$inf.2yr
+sim.pop$dths.inf.3yr <-sim.pop$mortality*sim.pop$inf.3yr
+sim.pop$dths.inf.4yr <-sim.pop$mortality*sim.pop$inf.4yr
+sim.pop$dths.inf.5yr <-sim.pop$mortality*sim.pop$inf.5yr
+
+#calculate deaths for old infections
+sim.pop$dths.old <- sim.pop$mortality*sim.pop$old.inf
+
+#calculate deaths for uninfected 
+sim.pop$dths.uninf <-sim.pop$mortality*sim.pop$uninf
+
+#calculate total deaths for each age group (no one dies from TB since disease prevalence at t0 is 0)
+sim.pop <- sim.pop  %>% mutate(tot.dths=rowSums( 
+  select(., \"dths.uninf\", \"dths.new.inf\", \"dths.inf.1yr\", \"dths.inf.2yr\", \"dths.inf.3yr\", \"dths.inf.4yr\", \"dths.inf.5yr\", \"dths.old\"))) 
+
+#check total pop
+sim.pop <- sim.pop  %>% mutate(tot.pop=rowSums( 
+  select(., \"uninf\", \"new.inf\", \"inf.1yr\", \"inf.2yr\", \"inf.3yr\", \"inf.4yr\", \"inf.5yr\", \"old.inf\"))) 
+
+
+#initialize other variables we will need for later years 
+add <- data.frame(tb.dis = rep(0, dim(sim.pop)[1]),  progress2tb = rep(0, dim(sim.pop)[1]), tb.dths=rep(0, dim(sim.pop)[1]), tb.dths_allcause=rep(0, dim(sim.pop)[1]), cure.self=rep(0, dim(sim.pop)[1]), cure.trt = rep(0, dim(sim.pop)[1]), pop.at.risk = rep(0, dim(sim.pop)[1]), new.inf.previous = rep(0, dim(sim.pop)[1]), pop.at.risk.dis = rep(0, dim(sim.pop)[1]), pop.at.risk.inf =  rep(0, dim(sim.pop)[1]), ari_par=rep(NA, dim(sim.pop)[1]) )
+sim.pop <- cbind(sim.pop, add)
+
+#save data frame to output after looping through all years 
+res <- sim.pop
+
+}
+
+if(i>1){
+  
+#save time step 
+sim.pop$time <- i
+    
+#move TB self cures and treatment cures 
+sim.pop$uninf <- sim.pop$uninf + sim.pop$cure.trt
+sim.pop$new.inf <- sim.pop$new.inf + sim.pop$cure.self
+
+#remove deaths 
+sim.pop$new.inf <- sim.pop$new.inf  - sim.pop$dths.new.inf
+sim.pop$inf.1yr <- sim.pop$inf.1yr - sim.pop$dths.inf.1yr
+sim.pop$inf.2yr <- sim.pop$inf.2yr - sim.pop$dths.inf.2yr
+sim.pop$inf.3yr <- sim.pop$inf.3yr - sim.pop$dths.inf.3yr
+sim.pop$inf.4yr <- sim.pop$inf.4yr - sim.pop$dths.inf.4yr
+sim.pop$inf.5yr <- sim.pop$inf.5yr - sim.pop$dths.inf.5yr
+sim.pop$old.inf <- sim.pop$old.inf - sim.pop$dths.old
+sim.pop$uninf <- sim.pop$uninf - sim.pop$dths.uninf
+#update tb disease group
+sim.pop$tb.dis <- sim.pop$tb.dis - sim.pop$cure.self - sim.pop$cure.trt - sim.pop$tb.dths - sim.pop$tb.dths_allcause
+
+#age population 
+sim.pop$uninf <- age.func(sim.pop, \"uninf\", 5)
+sim.pop$new.inf <- age.func(sim.pop, \"new.inf\", 5)
+sim.pop$inf.1yr <- age.func(sim.pop, \"inf.1yr\", 5)
+sim.pop$inf.2yr <- age.func(sim.pop, \"inf.2yr\", 5)
+sim.pop$inf.3yr <- age.func(sim.pop, \"inf.3yr\", 5)
+sim.pop$inf.4yr <- age.func(sim.pop, \"inf.4yr\", 5)
+sim.pop$inf.5yr <- age.func(sim.pop, \"inf.5yr\", 5)
+sim.pop$old.inf <- age.func(sim.pop, \"old.inf\", 5)
+sim.pop$tb.dis <- age.func(sim.pop, \"tb.dis\", 5)
+
+#add births to age 0-4 bucket and uninfected 
+births <- input$births
+sim.pop$uninf[1] <- sim.pop$uninf[1] + births
+
+sim.pop <- sim.pop  %>% mutate(pop.at.risk.dis=rowSums( 
+  select(., \"uninf\", \"new.inf\", \"inf.1yr\", \"inf.2yr\", \"inf.3yr\", \"inf.4yr\", \"inf.5yr\", \"old.inf\")))
+
+sim.pop <- sim.pop  %>% mutate(pop.at.risk.inf=rowSums( 
+  select(., \"uninf\", \"new.inf\", \"inf.1yr\", \"inf.2yr\", \"inf.3yr\", \"inf.4yr\", \"inf.5yr\", \"old.inf\")))
+
+sim.pop <- sim.pop  %>% mutate(tot.pop=rowSums( 
+  select(., \"uninf\", \"new.inf\", \"inf.1yr\", \"inf.2yr\", \"inf.3yr\", \"inf.4yr\", \"inf.5yr\", \"old.inf\", \"tb.dis\")))
+
+#save new infections from previous year 
+sim.pop$new.inf.previous <- sim.pop$new.inf
+
+#apply ARI to uninfected and infected groups
+sim.pop$new.inf = sim.pop$new.inf.previous*(input$ari)*(1-.025) + input$ari*sim.pop$uninf + input$ari*sim.pop$inf.1yr*(1-.01) +  input$ari*sim.pop$inf.2yr*(1-.005) + input$ari*sim.pop$inf.3yr*(1-.005) + input$ari*sim.pop$inf.4yr*(1-.005) + input$ari*sim.pop$inf.5yr*(1-.005) + input$ari*sim.pop$old.inf*(1-.00075)
+
+#age infections (deducting those who progressed to disease or were reinfected)
+sim.pop$old.inf <- sim.pop$old.inf*(1-.00075)*(1-input$ari)  + sim.pop$inf.5yr*(1-0.005)*(1-input$ari)
+sim.pop$inf.5yr <- sim.pop$inf.4yr*(1-0.005)*(1-input$ari)
+sim.pop$inf.4yr <- sim.pop$inf.3yr*(1-0.005)*(1-input$ari)
+sim.pop$inf.3yr <- sim.pop$inf.2yr*(1-0.005)*(1-input$ari)
+sim.pop$inf.2yr <- sim.pop$inf.1yr*(1-0.01)*(1-input$ari)
+sim.pop$inf.1yr <- sim.pop$new.inf.previous*(1-0.025)*(1-input$ari) 
+
+#apply disease progression 
+sim.pop$progress2tb <- sim.pop$new.inf*dis.prob[1] + sim.pop$inf.1yr*dis.prob[2] + sim.pop$inf.2yr*dis.prob[3] + sim.pop$inf.3yr*dis.prob[4] + sim.pop$inf.4yr*dis.prob[5] + sim.pop$inf.5yr*dis.prob[6] + sim.pop$old.inf*dis.prob[7]
+
+#calculate deaths for infected and uninfected groups 
+#calculate deaths for 1-5 yr infections
+sim.pop$dths.inf.1yr <-sim.pop$mortality*sim.pop$inf.1yr
+sim.pop$dths.inf.2yr <-sim.pop$mortality*sim.pop$inf.2yr
+sim.pop$dths.inf.3yr <-sim.pop$mortality*sim.pop$inf.3yr
+sim.pop$dths.inf.4yr <-sim.pop$mortality*sim.pop$inf.4yr
+sim.pop$dths.inf.5yr <-sim.pop$mortality*sim.pop$inf.5yr
+sim.pop$dths.old <-sim.pop$mortality*sim.pop$old.inf
+
+#calculate deaths for newly infected
+sim.pop$dths.new.inf <-sim.pop$mortality*sim.pop$new.inf
+
+#all disease group is sum of incident disease and prevalent disease from year before minus the treatment cures, death from disease, and self-cures 
+sim.pop$tb.dis <- sim.pop$tb.dis + sim.pop$progress2tb
+   
+
+#calculate TB deaths, treatment cures, self cures
+sim.pop$tb.dths <- sim.pop$tb.dis*input$tb.dth.rate
+sim.pop$cure.self <- sim.pop$tb.dis*input$self.cure.rate
+sim.pop$cure.trt <- sim.pop$tb.dis*input$tx.cure.rate
+
+
+#calculate mortality among TB group minus TB deaths
+sim.pop$tb.dths_allcause <- (sim.pop$tb.dis)*sim.pop$mortality - sim.pop$tb.dths
+#uninfected: uninfected plus infected/uninfected mortality and death from prevalent disease in previous year        
+    #22. uninfected: uninfected plus infected/uninfected mortality and death from prevalent disease in previous year
+    #  results1[i,10] = results1[i-1,10]*(1-input$ari) + results1[i-1,16] + results1[i-1,17] + results1[i-1,14]
+
+
+#calculate total deaths for each age group 
+sim.pop <- sim.pop  %>% mutate(tot.inf=rowSums( 
+  select(., \"new.inf\", \"inf.1yr\", \"inf.2yr\", \"inf.3yr\", \"inf.4yr\", \"inf.5yr\", \"old.inf\"))) 
+
+    
+sim.pop$uninf <- sim.pop$tot.pop - sim.pop$tot.inf - sim.pop$tb.dis
+
+#calculate deaths for uninfected 
+sim.pop$dths.uninf <-sim.pop$mortality*sim.pop$uninf
+
+#calculate total deaths for each age group 
+sim.pop <- sim.pop  %>% mutate(tot.dths=rowSums( 
+  select(., \"dths.uninf\", \"dths.new.inf\", \"dths.inf.1yr\", \"dths.inf.2yr\", \"dths.inf.3yr\", \"dths.inf.4yr\", \"dths.inf.5yr\", \"dths.old\", \"tb.dths\", \"tb.dths_allcause\"))) 
+
+res$ari_par = input$ari
+
+res <- rbind(res, sim.pop)
+
+
+
+}
+  
+} 
+
+return(res)
+}
+age_init %>% kable() %>% kable_styling()
+test <- model2(dis.prob, input.age, input)
+head(test) %>% kable() %>% kable_styling()
+```"

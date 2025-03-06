@@ -1,0 +1,42 @@
+"0","```r
+#initialize ages at t0
+
+sim.pop=phil2
+
+#create version where age max is 70+
+#sim.pop2=sim.pop[1:15,]
+
+#sim.pop2$Age <- as.character(sim.pop2$Age)
+#sim.pop2$Age[15] = \"70+\"
+#sim.pop2$Age=factor(sim.pop2$Age, levels = sim.pop2$Age)
+
+#sim.pop2$pop_prop[sim.pop2$Age==\"70+\"] = 1-sum(sim.pop2$pop_prop[1:14])
+#sim.pop2$dth_rate[sim.pop2$Age==\"70+\"] = sim.pop$dth_rate[15]
+
+#sim.pop=sim.pop2
+
+sim.pop$pop <- (sim.pop$pop_prop*1000000)
+
+birth.rate=.02
+dth.rate=birth.rate
+
+births=birth.rate*1000000
+
+
+#calculate proportion of deaths that should occur for each age group given age distribution and age specific mortality 
+
+#calculate deaths and remove
+dths <- sim.pop
+
+dths$dth_rate_trans <- (sim.pop$dth_rate)^(2.07/3)
+
+dths$dths <- sim.pop$pop*(sim.pop$dth_rate)^(2.07/3)
+#save total deaths (add back in later)
+tot.dths <- sum(dths$dths)
+
+dths$dths_prop <- dths$dths/tot.dths
+dths$dths_prop_old <- sim.pop$pop*(sim.pop$dth_rate)/sum(sim.pop$pop*(sim.pop$dth_rate))
+dths$newdths <-dths$dths_prop*births
+
+dths %>% dplyr::select(Age,pop, dth_rate, dth_rate_trans, dths_prop, dths_prop_old, newdths) %>% kable()
+```"

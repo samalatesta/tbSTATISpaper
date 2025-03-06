@@ -1,0 +1,11 @@
+"0","```r
+trt=new.dis
+
+trt$trt <- (5/4)*((trt$prog2tb/(trt$dis.prev*pop))-(1/5))
+
+trt$dis.dur <- (trt$dis.prev*1000000)/trt$prog2tb
+
+#trt$alltrt <- trt$trt*trt$dis.dur
+
+ggplot(data=trt) + geom_line(aes(x=dis.prev*100000, y=trt)) +ylab(\"Treatment rate\") +xlab(\"Disease/100000\") 
+```"

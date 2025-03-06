@@ -1,0 +1,13 @@
+"0","```r
+
+prog$prev2 <- (prog$prog2tb*2)/(1+(prog$prog2tb*2))*100000
+
+prog$ratio_inc = ((1000000-(prog$prev*10))*prog$ari)/(prog$prev*10)
+
+prog$ratio_inc2 = ((1000000-(prog$prev2*10))*prog$ari)/(prog$prev2*10)
+
+
+prog$dodd_prev = seq(100,1000,100)
+
+ggplot(data=prog) + geom_line(aes(x=ari, y=prev, color=\"Us (avg disease dur= 3 yrs)\"))  + geom_line(aes(x=ari, y=prev2, color=\"Us (avg disease dur= 2 yrs)\")) + geom_line(aes(x=ari, y=dodd_prev, color=\"Dodd et al\")) + ylab(\"Disease Prevalence/100000\") + ylim(0,1000) + xlim(0,0.042) + xlab(\"ARI\") +  geom_point(data=dat,aes(x=ari/100, y=tbprev)) +  geom_line(data=plot_data, aes(x = ari/100, y =  Predicted_value, color=\"Predicted - Linear regression\")) 
+```"

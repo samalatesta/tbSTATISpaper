@@ -1,0 +1,16 @@
+"0","```r
+
+#ggplot(data=df2) + geom_line(aes(x=time, y=inf.dths), color=\"blue\")+ geom_line(aes(x=time, y=progresstb), color=\"red\")+ facet_wrap(~ari_par)+ #ggtitle(\"Total population  by ARI\") + ylab(\"Deaths\") + xlab(\"Year\") 
+
+#ggplot(data=df2) + geom_line(aes(x=time, y=inf.dths.prop), color=\"red\")+ facet_wrap(~ari_par)+ ggtitle(\"Total population  by ARI\") + #ylab(\"Proportion\")+ geom_line(aes(x=time, y=new.inf), color=\"blue\") + geom_line(aes(x=time, y=progresstb), color=\"green\")  + xlab(\"Year\") 
+
+t100 <- df %>% dplyr::filter(time==99) %>% dplyr::group_by(ari_par) %>% dplyr::summarise(prev = sum(tb.dis), tot.inf=sum(tot.inf), new.inf = sum(new.inf), on.trt=sum(on.trt))
+
+#ggplot(data=t100) + geom_line(aes(x=ari_par, y=prev/tot.inf, color=\"Our model\"))  
+
+#plot death curves 
+dths <- df %>% dplyr::filter(ari_par==\"0.009\")%>% dplyr::group_by(time) %>% dplyr::summarise(tot.dths=sum(tot.dths), uninf.dths=sum(dths.uninf) , tb.dths = sum(tb.dths_allcause), inf.dths = sum(dths.new.inf)+sum(dths.inf.1yr)+sum(dths.inf.2yr)+sum(dths.inf.3yr)+sum(dths.inf.4yr)+ sum(dths.inf.5yr)+sum(dths.old), new.inf.dths = sum(dths.new.inf), inf.dths.1to5 = sum(dths.inf.1yr)+sum(dths.inf.2yr)+sum(dths.inf.3yr)+sum(dths.inf.4yr)+ sum(dths.inf.5yr) , inf.dths.old = sum(dths.old))
+
+
+ggplot(data=dths) + geom_line(aes(x=time, y=tot.dths, color=\"Total Deaths\")) + geom_line(aes(x=time, y=inf.dths, color=\"Infected Deaths\")) + geom_line(aes(x=time, y=tb.dths, color=\"TB Deaths\")) + geom_line(aes(x=time, y=uninf.dths, color=\"Uninfected Deaths\")) + geom_line(aes(x=time, y=new.inf.dths, color=\"New Infection Deaths\")) + geom_line(aes(x=time, y=inf.dths.1to5, color=\"1-5 year Infection Deaths\")) + geom_line(aes(x=time, y=inf.dths.old, color=\"Old Infection Deaths\")) + ylab(\"Deaths\") + scale_color_discrete(name=\"\")
+```"

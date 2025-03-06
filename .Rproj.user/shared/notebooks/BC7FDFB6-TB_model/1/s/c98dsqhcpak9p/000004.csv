@@ -1,0 +1,8 @@
+"0","```r
+ggplot(data=tmax) + geom_line(aes(x=ari_par, y=(new.inf*1000000)/(prev-on.trt), color=factor(cure.rt_par))) + xlab(\"ARI\") + ylab(\"Incident Infections/Disease Prevalence\") + scale_color_discrete(name=\"Treatment Rate\")  + ylim(0,15)
+
+ggplot(data=tmax) + geom_line(aes(x=ari_par, y=(sus.inf)/(prev-on.trt), color=factor(cure.rt_par))) + xlab(\"ARI\") + ylab(\"New Infections/Disease Prevalence\") + scale_color_discrete(name=\"Treatment Rate\") + ylim(0,15)
+
+
+ggplot(data=tmax) + geom_line(aes(x=ari_par, y=(reinf)/(prev-on.trt), color=factor(cure.rt_par))) + xlab(\"ARI\") + ylab(\"Reinfections/Disease Prevalence\") + scale_color_discrete(name=\"Treatment Rate\") + ylim(0,15)
+```"

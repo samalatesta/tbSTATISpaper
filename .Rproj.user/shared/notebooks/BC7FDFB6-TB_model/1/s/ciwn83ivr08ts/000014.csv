@@ -1,0 +1,4 @@
+"0","```r
+
+ggplot(data=dftrt2) + geom_line(aes(x=time, y=tot.pop, color=factor(ari_par)))+ facet_wrap(~cure.rt_par) + ggtitle(\"Total population by ARI and Treatment\") + ylab(\"Frequency\") + xlab(\"Year\") 
+```"

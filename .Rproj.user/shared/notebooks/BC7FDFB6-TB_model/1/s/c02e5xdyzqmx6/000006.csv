@@ -1,0 +1,14 @@
+"0","```r
+
+trt2 <- trt
+trt2$totalprop <- (trt$prog2tb/(trt$dis.prev*pop))
+trt2$totalxdis.dur=trt2$totalprop*trt2$dis.dur
+
+trt2$trt <- (5/4)*(trt2$totalprop-(1/5))
+
+trt2$dths.selfcure=trt2$totalprop-trt2$trt
+
+trt2$totalpropxdis <- (trt2$dis.prev*1000000)*trt2$totalprop
+
+trt2 %>% select(ari, dis.prev, dis.dur, prog2tb, totalprop, totalpropxdis, trt, dths.selfcure)
+```"

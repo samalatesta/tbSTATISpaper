@@ -1,0 +1,6 @@
+"0","```r
+#aggregate summary measures across ages 
+res2 <- test %>% dplyr::group_by(time) %>% dplyr::summarise(tb.dis = sum(tb.dis), tot.pop = sum(tot.pop), dis.prev = tb.dis/tot.pop, uninf = sum(uninf), uninf.prop = uninf/tot.pop, inf.prop = sum(tot.inf)/tot.pop, progresstb = sum(progress2tb), at_risk_dis = sum(tot.inf)+sum(uninf), new.inf =sum(new.inf))
+
+ggplot(data=res2) + geom_line(aes(x=time, y=dis.prev)) + ggtitle(\"TB prevalence\")
+```"

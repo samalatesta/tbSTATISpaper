@@ -1,0 +1,84 @@
+"0","```r
+#run for 15 years, age increases by 1 each year unless death, if death the added back to pop at age 1
+steps = 500
+
+#initialize data frame to save changes in pop over time
+
+pop.change <- data.frame(matrix(nrow=steps, ncol=8))
+colnames(pop.change) <- c(\"time\", \"tot_pop\", \"dths\", \"n_bucket1\", \"n_move_bucket1\", \"n_dths_bucket1\", \"n_aged_bucket1\", \"brths\")
+  
+  
+sim.pop2 <- dths %>% dplyr::select(-dths) %>% dplyr::mutate(dths = dths_prop*births)
+
+
+for(i in 1:steps){
+  
+pop.change$time[i] <- i
+
+pop.change$tot_pop[i] <- sum(sim.pop2$pop)
+
+#calculate deaths and remove
+sim.pop2$dths <-sim.pop2$dths_prop*births
+
+#save total deaths (add back in later)
+tot.dths <- sum(sim.pop2$dths)
+
+#subtract deaths for each age
+sim.pop2$pop_old <- sim.pop2$pop
+
+sim.pop2$pop_minus_dths <- sim.pop2$pop_old - sim.pop2$dths
+
+#move 1/5 of each age bucket forward
+sim.pop2$move <- sim.pop2$pop_minus_dths/5 
+sim.pop2$move[dim(sim.pop2)[1]] <- 0
+sim.pop2$pop_aged_minus_move <- sim.pop2$pop_minus_dths - sim.pop2$move
+sim.pop2$diff <- sim.pop2$pop_old - sim.pop2$pop_aged_minus_move - births
+
+
+sim.pop2$pop_aged_all <- NA
+sim.pop2$add <-NA
+for(j in 1:(dim(sim.pop2)[1]-1)){
+   sim.pop2$pop_aged_all[j+1] <- sim.pop2$pop_aged_minus_move[j+1] + sim.pop2$move[j]
+   sim.pop2$add[j+1] <- sim.pop2$move[j]
+}
+
+#add back in deaths to age 0
+#sim.pop2$pop_aged_all[1] <- (tot.dths + sim.pop2$pop_aged_minus_move[1])
+sim.pop2$pop_aged_all[1] <- (births + sim.pop2$pop_aged_minus_move[1]) 
+#update pop after aging/adding in deaths  
+sim.pop2$pop <- sim.pop2$pop_aged_all
+#pop.change$dths[i] <- tot.dths
+pop.change$dths[i] <- tot.dths
+
+pop.change$brths[i] <- births
+#save n in first age bucket and n leaving first age bucket, also save deaths
+pop.change$n_bucket1[i] <- sim.pop2$pop_old[1]
+
+pop.change$n_move_bucket1[i] <- sim.pop2$move[1]
+
+pop.change$n_dths_bucket1[i] <- sim.pop2$dths[1]
+
+pop.change$n_aged_bucket1[i]=sim.pop2$pop_aged_all[1]
+
+sim.pop2$time  <- i
+if(i==1){
+res <- sim.pop2
+
+}
+
+if(i>1){
+res <- rbind(res, sim.pop2)
+
+}
+
+}
+
+#sim.pop2  %>% kable()%>% kable_styling()
+ 
+p1 <- ggplot(data = sim.pop) + geom_bar(aes(x=sim.pop$Age, y=sim.pop$pop), stat=\"identity\") + ggtitle(\"Population distribution by age at t_0\") + xlab(\"Age\") + ylab(\"Population\") + ylim(0,150000)
+
+p2 <- ggplot(data = sim.pop2) + geom_bar(aes(x=sim.pop2$Age, y=sim.pop2$pop), stat=\"identity\") + ggtitle(\"Population distribution by age at t_max\") + xlab(\"Age\") + ylab(\"Population\") +ylim(0,150000)
+
+
+ggarrange(p1, p2, nrow=2)
+```"

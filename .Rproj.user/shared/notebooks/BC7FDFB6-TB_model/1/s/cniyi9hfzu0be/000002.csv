@@ -1,0 +1,37 @@
+"0","```r
+runs <- vector(mode = \"list\", length = dim(aris)[1])
+
+inc=0
+
+for(i in 1:dim(aris)[1]){
+inc=inc+1
+#Probability of progression to disease 
+dis.prob <- c(0.025,0.01,rep(0.005,4),0.00075)
+
+#inputs that depend on age 
+#population data from Phillipines collapsed to same age categories as Tupasi data and add TB inf prev from paper 
+input.age <- phil2
+input.age$inf.prev=0
+tx.cure=.5
+#model inputs that do not depend on age 
+input <- data.frame( tx.cure.rate=tx.cure, start.pop=1000000, old.inf.prop=0, ari= aris$ari[i]/100, steps=100 ,  self.cure.rate = ((1- tx.cure)/2)/5, tb.dth.rate=((1-tx.cure)/2)/5, births=20000)
+  
+#run model and save each run in list
+res <- model4(dis.prob, input.age, input)
+
+runs[[inc]] <- res
+
+}
+  
+
+#plots
+
+df <- do.call(\"rbind\", runs) %>% na.omit()
+
+#aggregate summary measures across ages 
+df2 <- df %>% dplyr::group_by(ari_par, time) %>% dplyr::summarise(tb.dis = sum(tb.dis), tot.pop = sum(tot.pop), dis.prev = tb.dis/tot.pop, uninf = sum(uninf), uninf.prop = uninf/tot.pop, inf.prop = sum(tot.inf)/sum(tot.pop), progresstb = sum(progress2tb)/tot.pop, at_risk_dis = sum(tot.inf)+sum(uninf), new.inf =sum(new.inf)/tot.pop, tot.inf=sum(tot.inf), dths = sum(tot.dths), dis.inf.rt = dis.prev/inf.prop, uninf.dths = sum(dths.uninf), inf.dths = sum(dths.new.inf)+sum(dths.inf.1yr)+sum(dths.inf.2yr)+sum(dths.inf.3yr)+sum(dths.inf.4yr)+ sum(dths.inf.5yr)+sum(dths.old), allinf = (sum(tb.dis)+sum(tot.inf))/tot.pop, inf.dths.prop = inf.dths/tot.pop)
+
+#head(df)
+
+ggplot(data=df2) + geom_line(aes(x=time, y=dis.prev, color=factor(ari_par))) + ggtitle(\"Disease prevalence by ARI\") + ylab(\"Disease Prevalence\") + xlab(\"Year\") 
+```"

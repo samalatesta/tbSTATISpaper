@@ -1,0 +1,4 @@
+"0","```r
+
+ggplot(data = phil) + geom_bar(aes(x=phil$Age, y=phil$pop_prop*100), stat=\"identity\") + ggtitle(\"Population distribution by age\") + xlab(\"Age\") + ylab(\"Population (%)\")
+```"

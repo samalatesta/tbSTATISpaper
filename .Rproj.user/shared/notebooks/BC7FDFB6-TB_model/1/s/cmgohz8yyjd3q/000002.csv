@@ -1,0 +1,6 @@
+"0","```r
+
+dat <- read.csv(\"Dodd data.csv\")
+
+ggplot(data=dat) + geom_point(aes(x=ari, y=tbprev)) + geom_line(data=aris, aes(x=ari, y=prev, color=\"Dodd et al\")) + ylab(\"Disease/100000\") + xlab(\"ARI\")
+```"

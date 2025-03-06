@@ -1,0 +1,4 @@
+"0","```r
+
+ggplot(data=df2) + geom_line(aes(x=time, y=tot.pop, color=factor(ari_par))) + ggtitle(\"Total population  by ARI\") + ylab(\"Frequency\") + xlab(\"Year\") 
+```"

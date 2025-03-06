@@ -1,0 +1,4 @@
+"0","```r
+
+ggplot(data=t100) +  geom_line(aes(x=prev, y=new.inf, color=\"Incident Infections\")) 
+```"

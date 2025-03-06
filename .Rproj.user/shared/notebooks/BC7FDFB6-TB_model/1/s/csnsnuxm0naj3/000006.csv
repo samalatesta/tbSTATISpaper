@@ -1,0 +1,13 @@
+"0","```r
+
+new <- dis.progress %>% dplyr::filter(group==\"New\")
+
+dis.dur <- new.dis %>% dplyr::select(ari, dis.prev, dis.dur) %>% dplyr::distinct(ari, dis.prev, dis.dur)
+
+new <- dplyr::left_join(new, dis.dur, by=c(\"ari\", \"dis.prev\"))
+
+
+#ggplot(data=new) + geom_line(aes(x=ari, y=prog2tb/(dis.prev*1000000))) +ylab(\"Progress to disease/disease prevalence\") +xlab(\"ARI\") 
+
+ggplot(data=new) + geom_line(aes(x=ari, y=inf.prev/(dis.prev*1000000))) +ylab(\"incident infections/disease prevalence\") +xlab(\"ARI\") 
+```"

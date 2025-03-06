@@ -1,0 +1,4 @@
+"0","```r
+
+ggplot(data=df2) + geom_line(aes(x=time, y=uninf.prop, color=factor(ari_par))) + ggtitle(\"Uninfected proportion  by ARI\") + ylab(\"Proportion Uninfected\") + xlab(\"Year\") 
+```"

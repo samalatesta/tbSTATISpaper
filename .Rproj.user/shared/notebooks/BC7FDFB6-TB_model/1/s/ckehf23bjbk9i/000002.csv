@@ -1,0 +1,13 @@
+"0","```r
+trt=prog
+
+trt$trt <- (5/4)*(((trt$prog2tb*1000000)/(trt$prev*10))-(1/5))
+
+trt$self.cure.dths = (1/10)*(1-trt$trt)
+
+trt$dis.dur <- (trt$prev*10)/(trt$prog2tb*1000000)
+
+#trt$alltrt <- trt$trt*trt$dis.dur
+
+ggplot(data=trt) + geom_line(aes(x=prev, y=trt, color=\"Treatment rate\") )+ geom_line(aes(x=prev, y=self.cure.dths, color=\"Self-cure/TB mortality\"))+xlab(\"Disease/100000\") + geom_line(aes(x=prev, y=2*self.cure.dths+trt, color=\"Total leaving disease state\")) + ylim(0,.6) + ylab(\"Rate\") + ggtitle(\"Disease duration=3 yrs\")
+```"

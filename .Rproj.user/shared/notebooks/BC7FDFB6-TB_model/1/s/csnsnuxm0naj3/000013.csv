@@ -1,0 +1,5 @@
+"0","```r
+
+
+ggplot(data=x) + geom_line(aes(x=ari, y=reinf/incinf, color=\"Reinfections/Incident Infections\")) + ylim(0,1)
+```"

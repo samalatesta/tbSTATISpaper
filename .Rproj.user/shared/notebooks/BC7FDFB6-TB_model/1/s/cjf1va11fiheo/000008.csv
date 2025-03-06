@@ -1,0 +1,20 @@
+"0","```r
+
+
+#make version of phillipines data with no age 0, add age 0 pop to age 0-4, take death rate to be age 1-4 dth rate 
+
+phil2 <- phil %>% dplyr::select(Age, pop_prop, dth_rate)
+
+phil2 <- phil2[2:dim(phil2)[1],]
+
+age0_prop <- 1-sum(phil2$pop_prop)
+
+phil2$Age <- as.character(phil2$Age)
+
+phil2$Age[phil2$Age==\"1-4\"] <- \"0-4\"
+
+phil2$pop_prop[phil2$Age==\"0-4\"] <- phil2$pop_prop + age0_prop
+
+phil2$Age <- factor(phil2$Age, levels=phil2$Age)
+
+```"

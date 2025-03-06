@@ -1,0 +1,4 @@
+"0","```r
+
+ggplot(data=new) + geom_line(aes(x=ari, y=(inf.prev/(dis.prev*1000000))*dis.dur))+ylab(\"Average infections from an infectious case\") +xlab(\"ARI\") + ylim(0, 17)
+```"

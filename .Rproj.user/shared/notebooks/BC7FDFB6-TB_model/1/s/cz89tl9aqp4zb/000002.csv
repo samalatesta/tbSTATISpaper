@@ -1,0 +1,30 @@
+"0","```r
+#helper functions
+
+#function to age people
+age.func <- function(pop, var, bucket.size){
+data <- pop %>% dplyr::select(Age, var)
+
+data$var_old <- data[,var]
+
+#move 1/5 of each age bucket forward
+data$move <- data$var/bucket.size
+data$move[dim(data)[1]] <- 0
+#subtract the number to be aged from current age 
+data$var_minus_move <- data$var - data$move
+
+
+data$var_aged <- NA
+data$add <-NA
+
+for(j in 1:(dim(data)[1]-1)){
+   data$var_aged[j+1] <- data$var_minus_move[j+1] + data$move[j]
+   data$add[j+1] <- data$move[j]
+}
+
+data$var_aged[1] <- data$var_minus_move[1]
+
+return(data$var_aged)  
+}
+
+```"

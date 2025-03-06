@@ -1,0 +1,4 @@
+"0","```r
+
+ggplot(data=inf.prev2) + geom_line(aes(x=dis.prev, y=inf.prev/pop, color=group)) +ylab(\"Infected proportion\") +xlab(\"Disease Prevalence\") + geom_line(data=inf.prev,aes(x=dis.prev, y=inf.prev/pop)) + scale_color_discrete(name=\"Age of most recent infection\")
+```"
