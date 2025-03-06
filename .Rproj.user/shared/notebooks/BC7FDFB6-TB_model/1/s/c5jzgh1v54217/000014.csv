@@ -1,5 +1,0 @@
-"0","```r
-
-age_init = res %>% dplyr::filter(time==100) %>% dplyr::select(Age,pop, dths_prop)
-
-```"

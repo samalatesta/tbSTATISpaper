@@ -1,6 +1,0 @@
-"0","```r
-
-#combine Tupasi and Phillipines WHO data
-phil2 <- cbind(phil2, inf.prev = tupasi2$inf.prev)
-
-```"

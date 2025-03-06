@@ -1,6 +1,0 @@
-"0","```r
-
-
-ggplot(data=tmax) + geom_line(aes(x=cure.rt_par, y=prev*100000, color=factor(ari_par))) + xlab(\"Treatment Rate\") + ylab(\"Disease/100000\") + scale_color_discrete(name=\"ARI\")
-
-```"

@@ -1,4 +1,0 @@
-"0","```r
-
-ggplot(data=dat) + geom_point(aes(x=ari, y=(ari*1000)/tbprev)) + geom_line(data=aris, aes(x=ari, y=(ari*1000)/prev, color=\"Dodd et al\")) + xlab(\"ARI\") +ylab(\"Incident infections/smear positive case/1 year\") + ylim(0,13)
-```"

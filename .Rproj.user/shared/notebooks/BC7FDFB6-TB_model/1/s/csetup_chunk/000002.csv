@@ -1,9 +1,0 @@
-"0","```r
-knitr::opts_chunk$set(echo = T, message=F, warning =F)
-library(dplyr)
-library(kableExtra)
-library(ggplot2)
-library(ggpubr)
-options(digits=10)
-setwd(\"/projectnb/cbs/samalate/TBinfection\")
-```"

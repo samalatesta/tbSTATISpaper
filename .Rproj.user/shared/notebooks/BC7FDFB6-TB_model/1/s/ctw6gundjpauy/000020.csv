@@ -1,4 +1,0 @@
-"0","```r
-
-ggplot(data=t100) +  geom_line(aes(x=ari_par, y=new.inf, color=\"New Infections\")) + geom_line(aes(x=ari_par, y=prev, color=\"TB\"))
-```"

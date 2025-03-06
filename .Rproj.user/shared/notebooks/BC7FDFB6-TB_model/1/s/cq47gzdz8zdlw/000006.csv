@@ -1,4 +1,0 @@
-"0","```r
-#ggplot(data=test) + geom_line(aes(x=time, y=tb.dis/tot.pop, color=Age)) + ggtitle(\"TB prevalence by age\") + ylab(\"Disease Prevalence\")
-ggplot(data=res2) + geom_line(aes(x=time, y=progresstb/at_risk_dis)) + ylab(\"Disease Incidence\")
-```"

@@ -1,4 +1,0 @@
-"0","```r
-
-ggplot(data=trt) + geom_line(aes(x=prev, y=dis.dur)) +ylab(\"Disease duration\") +xlab(\"Disease/100000\") + ylim(0,4)
-```"

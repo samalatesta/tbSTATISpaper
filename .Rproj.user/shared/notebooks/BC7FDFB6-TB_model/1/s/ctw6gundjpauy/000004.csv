@@ -1,4 +1,0 @@
-"0","```r
-
-ggplot(data=df2) + geom_line(aes(x=time, y=progresstb, color=factor(ari_par))) + ggtitle(\"Disease incidence  by ARI\") + ylab(\"Disease Incidence\") + xlab(\"Year\") 
-```"

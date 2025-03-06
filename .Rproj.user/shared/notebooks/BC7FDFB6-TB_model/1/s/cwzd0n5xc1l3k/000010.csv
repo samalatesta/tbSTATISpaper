@@ -1,8 +1,0 @@
-"0","```r
-tot.pop <- res %>% dplyr::group_by(time) %>% dplyr::summarise(n=sum(pop))
-
-res2 <- dplyr::left_join(res, tot.pop, by=\"time\") %>% dplyr::mutate(pop_prop2 = pop/n)
-
-ggplot(data=res2) + geom_line(aes(x=time, y=pop_prop2, color=Age)) + facet_wrap(~Age)
-
-```"

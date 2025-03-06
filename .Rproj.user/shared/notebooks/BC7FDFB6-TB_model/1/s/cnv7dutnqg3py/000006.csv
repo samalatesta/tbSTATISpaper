@@ -1,7 +1,0 @@
-"0","```r
-
-#ggplot(data=res) + geom_line(aes(x=time, y=pop, color=Age)) + facet_wrap(~Age)
-
-
-
-```"

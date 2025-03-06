@@ -1,3 +1,0 @@
-"0","```r
-ggplot(data=res2) + geom_line(aes(x=time, y=new.inf/at_risk_dis)) + ylab(\"Infection Incidence\")
-```"

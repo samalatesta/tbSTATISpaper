@@ -1,4 +1,0 @@
-"0","```r
-
-ggplot(data = phil) + geom_bar(aes(x=phil$Age, y=phil$dth_rate*100000), stat=\"identity\") + ggtitle(\"Death rate by age\") + xlab(\"Age\") + ylab(\"Death rate/100,000\")
-```"

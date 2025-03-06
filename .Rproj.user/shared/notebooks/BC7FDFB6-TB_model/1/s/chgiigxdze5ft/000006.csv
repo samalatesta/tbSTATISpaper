@@ -1,6 +1,0 @@
-"0","```r
-
-#pop.change %>% kable()%>% kable_styling()
-
-ggplot(data=pop.change) + geom_line(aes(x=time, y=tot_pop)) + ggtitle(\"Population size over time\") 
-```"

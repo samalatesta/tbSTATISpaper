@@ -1,3 +1,0 @@
-"0","```r
-ggplot(data=df2) + geom_line(aes(x=time, y=dths, color=factor(ari_par))) + ggtitle(\"Deaths by ARI\") + ylab(\"Deaths\") + xlab(\"Year\") 
-```"

@@ -1,5 +1,0 @@
-"0","```r
-
-
-ggplot(data=t100) +  geom_line(aes(x=ari_par, y=new.inf/(prev-on.trt), color=\"Incident Infections\")) + ylim(0,10)
-```"

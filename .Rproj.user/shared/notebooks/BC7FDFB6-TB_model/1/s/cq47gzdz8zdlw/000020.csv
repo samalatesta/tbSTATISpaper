@@ -1,4 +1,0 @@
-"0","```r
-
-ggplot(data=test) + geom_line(aes(x=time, y=tb.dis, color=\"TB disease\"))  +  geom_line(aes(x=time, y=start.trt, color=\"Start trt\")) +  geom_line(aes(x=time, y=cure.self, color=\"Self cure\")) +  geom_line(aes(x=time, y=tb.dths, color=\"TB dths\")) 
-```"

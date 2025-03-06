@@ -1,4 +1,0 @@
-"0","```r
-
-ggplot(data=trt) + geom_line(aes(x=prev, y=trt*prev*10, color=\"Treatment rate\") )+ geom_line(aes(x=prev, y=self.cure.dths*prev*10, color=\"Self-cure/TB mortality\"))+xlab(\"Disease/100000\") + geom_line(aes(x=prev, y=(2*self.cure.dths+trt)*prev*10, color=\"Total leaving disease state\")) + ylab(\"Individuals\") + ggtitle(\"Disease duration=2 yrs\")
-```"

@@ -1,4 +1,0 @@
-"0","```r
-
-aris %>% dplyr::mutate(pop=1000000, inc.inf=pop*(ari/100),disease = prev*10, inc.prev = inc.inf/disease) 
-```"

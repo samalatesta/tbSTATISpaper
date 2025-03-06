@@ -1,5 +1,0 @@
-"0","```r
-
-
-ggplot(data=trt) + geom_line(aes(x=dis.prev*100000, y=trt*dis.dur)) +ylab(\"Treatment rate*Disease duration\") +xlab(\"Disease/100000\") 
-```"
