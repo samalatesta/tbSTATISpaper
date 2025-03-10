@@ -2,5 +2,8 @@ sim_data**
 sim_seq**
 Archive
 **qsub.o**
-**sh.o**
+**.o**
 **sh.e**
+.Rproj.user
+**.csv
+**.png
