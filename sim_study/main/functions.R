@@ -7,101 +7,96 @@
 
 library(dplyr)
 
-#' Propose simultaneous events
-#'
-#' @param info A data frame.
-#' @param all_seqs List of all possible sequences.
-#' @return A ggplot object.
-#' @keywords internal
+#' Function: get_stage
+#' Purpose: Obtain predicted disease class for individuals after estimating TB-STATIS
 #'
 
 get_stage <- function(data=data.frame(), S=data.frame(), p=vector()){
+  
+  #get likelhood 
   likelihood=get_likelihood(data, S, p )
   
+  #save class probs
   stage_probs <- likelihood[[2]]
-  
-  
   stage_probs=data.frame(stage_probs)
+  #update colnames to class numbers
   colnames(stage_probs) = c(0:max(S$sub))
   
+  #assign disease class with max prob
   pred_stage=as.numeric(colnames(stage_probs)[apply(stage_probs,1,which.max)])
   
+  #cbind to original data
   stagedf <- cbind(data,pred_stage)
   
   return(stagedf)
 }
 
-
+#' Function: make_D
+#' Purpose: Generate set of clinical measures and # of states per measure given N total clinical states 
+#'
 make_D <- function(N){
-  
+ 
+  #select number of clinical measures
   nbio <- sample(2:N, 1)
   D <- data.frame(bio=paste0("bio", 1:nbio), events=rep(1, nbio))
   
+  #generate number of states per measure
   repeat{
     if(sum(D$events)==N){
       break
     }
     rowadd <- sample(1:nbio, 1)
-    
     D$events[rowadd] <- D$events[rowadd]+1
-    
   }
   
   return(D)
 }
 
-
+#' Function: get_group
+#' Purpose: Generate simulataneous disease sequence given sequence of clinical states. 
+#'
 get_group <- function( info=data.frame(), all_seqs){
-
+  #arrange sequence of states
   info <- info %>% dplyr::arrange(order)
   N=dim(info)[1]
   
+  #select disease sequence allowing multiple states per disease class
+  #code allows for multiple states in one measure to occur at the same class
+  #uncomment code below if clinical measures should be unique per class
   all_seqs2=all_seqs
   all_seqs=data.frame(t(apply(all_seqs[,1:N], 1, function(i) paste(i, info$bio) )))
   all_seqs$unique= apply(all_seqs[,1:N], 1, function(x) length(unique(x)))==N
   
+  #all possible seqs after criteria above
   final <-  cbind(all_seqs2, data.frame(unique=all_seqs$unique))#%>% dplyr::filter(unique==T)
+  #randomly select one sequence to use
   select <- sample(1:dim(final)[1],1)
   
+  #add to info df
   info$sub<- as.numeric(final[select,1:N])
 
-  
   # print(info)
   return(info)
 }
 
+#' Function: get_seq
+#' Purpose: Propose sequence as start point for maximum likelihood estimation.
+#'
 
-#' Propose sequence as start point for maximum likelihood estimation.
-#'
-#' @param info A data frame.
-#' @return A data frame.
-#' @keywords internal
-#'
-#### Initialize sequence events
 get_seq <- function(info=data.frame()){
-  #info=make_D(5)
-  #transform D to long form
-  #bio_info_long<- data.frame(bio=NA, event=NA)
-  #for(i in 1: dim(info)[1]){
-   #add <- data.frame(bio=rep(info[i,1]), event = c(1:info[i,2]))
-   #bio_info_long <- rbind(bio_info_long, add)
-  
-  #}
-  
-  #bio_info_long <- bio_info_long %>% dplyr::filter(is.na(event)==F)
+  #save info df to work with
   bio_info_long <- info
+  #update col names
   colnames(bio_info_long) <- c("bio", "event", "var_name")
-  #bio_info_long <- ml[[2]][[1]]
+
   N=dim(bio_info_long)[1]
+  #save original order of states
   bio_info_long$pos = c(1:N)
   
-  #sample(bio_info_long$bio, N)
-  #all_perms <- combinat::permn(bio_info_long$bio)
-  #r <- sample(1:length(all_perms),1)
-  #temp <- all_perms[[r]]
-  
+  #sample from clinical measures w/o replacement as new order and save as temp df
   temp<-sample(bio_info_long$bio, N)
   
+  #update order in df
   bio_info_long_temp <- bio_info_long
   bio_info_long_temp$temp <- temp
   bio_info_long_temp <- bio_info_long_temp %>% dplyr::arrange(temp) 
@@ -116,40 +111,35 @@ get_seq <- function(info=data.frame()){
 
 
 
-#' Generate data frame of all possible simultaneous sequences.
+#' Function: possible_seqs
+#' Purpose: Generate data frame of all possible sequences given N total clinical states
 #'
-#' @param N Number of events.
-#' @return A data frame.
-#' @keywords internal
-#'
-#
-
 
 possible_seqs <- function(N=numeric()){
-  
+  #filter such that first disease class is 1 and are monotonically non-decreasing
   filter_rows <- function(g, x) {
     ok  <- function(z) all(diff(z) %in% 0:1)
     out <- g[apply(g, 1, ok), ]
     replace(out, TRUE, lapply(out, \(i) x[i]))
   }
+  #generate all seqs
   f2 <- function(x = c(1:N), n=N+1, n1=2) {
     data.frame(as.list(rep(1, n1)),
                gtools::combinations(length(x), n-n1, repeats.allowed = TRUE)) |>
       filter_rows(x)
   }
-  
-  # test runs
-  all=f2() # as per question
+  #generate all possible sequences of size N and filter using filter_rows and f2 functions
+  all=f2() 
   all <- all[,-1]
   return(all)
 }
 
-#D<- make_D(4)
-#p=.95
-#M=100
-#S=seq
-get_likelihood <- function(data=data.frame(), S=data.frame(), p_vec=vector()){
 
+#' Function: get_likelihood
+#' Purpose: Calculate likelhood given observed data, sequence S, vector of clinical measure accuracies p_vec
+#'
+get_likelihood <- function(data=data.frame(), S=data.frame(), p_vec=vector()){
+  #input data
   bio <- data.frame(data[,1:ncol(data)])
   
   # number of biomarkers
@@ -158,6 +148,7 @@ get_likelihood <- function(data=data.frame(), S=data.frame(), p_vec=vector()){
   #individuals in data set
   M = dim(bio)[1]
   
+  #new df to become probabilities from 0/1 data
   new_bio <- bio
   
   #multiply each p by each corresponding variable
@@ -172,23 +163,18 @@ get_likelihood <- function(data=data.frame(), S=data.frame(), p_vec=vector()){
   p_perm_k = matrix(NA,M,N+1)
   
   #order based on sequence S and length
-  #order = as.numeric(S$pos)
-  
   group = as.numeric(S$sub)
   
   #reorder biomarker columns based on S
   bio_order = new_bio
   
-  #add alpha to make more continuous
-  #alpha=.1
-  
   #bio_order=bio_order+alpha
   normal <- 1-bio_order
   
-  #special case stage 1
+  #special case class 1
   normal_prob = normal %>% dplyr::mutate(prod = apply(., 1, prod, na.rm=T)) %>% dplyr::select(prod)
-  #normal_prob[which(normal_prob==0)] <- .1
   
+  #save probs for class 1
   tot_prob_stage = normal_prob[,1]
   
   p_perm_k[,1] <- tot_prob_stage
@@ -208,29 +194,19 @@ get_likelihood <- function(data=data.frame(), S=data.frame(), p_vec=vector()){
       
       normal <- 1-data.frame(bio_order[,normal_cols[,1]])
       normal[normal==-1]<- 1
-      #abnormal_n <- apply(abnormal, 1, sum)
-      #normal_n <- apply(normal, 1, function(x) sum(x==0))
-      
-      
-      
+    
       abnormal_prob = abnormal %>% dplyr::mutate(prod = apply(., 1, prod, na.rm=T)) %>% dplyr::select(prod)
-      #abnormal_prob[which(abnormal_prob==0)] <- .1
-      
+
       normal_prob = normal %>% dplyr::mutate(prod = apply(., 1, prod, na.rm=T)) %>% dplyr::select(prod)
-      #normal_prob[which(normal_prob==0)] <- .1
-      #fill in empty matrix
-      #abnormal_prob <- ifelse(sum(abnormal_n,normal_n)>0 & abnormal_n==0, .5*normal_prob, abnormal_prob)
-      #normal_prob <- ifelse(sum(abnormal_n,normal_n)>0 & normal_n==0, .5*abnormal_prob, normal_prob)
-      
-      
+    
       tot_prob_stage = abnormal_prob[,1]*normal_prob[,1]
       #tot_prob_stage= (abnormal+normal)/dim(bio_order)[1]
       
-      
+      #save probs
       p_perm_k[,i+1] <-   tot_prob_stage
       
     }
-    
+    #special case max class, all states should have occurred
     if(i == max(group)){
       #special case stage 1
       abnormal <- bio_order
@@ -246,43 +222,51 @@ get_likelihood <- function(data=data.frame(), S=data.frame(), p_vec=vector()){
     
     
   }
-  #p_perm_k <-  ifelse(p_perm_k==0,y,p_perm_k)
-  
+  #divide probs by total classess
   prob_subj = p_perm_k*(1/(max(group)+1))
-  #prob_subj <- prob_subj+0.01
+  
+  #multiply across rows to get individual likelihood for class k
   total_prob_subj = apply(prob_subj,1,sum, na.rm=T)
   
+  #full likelhood by summing log likes for each ind. 
   loglike = sum(log(total_prob_subj + 1e-250))
   
   
   return(list(p_perm_k, prob_subj, total_prob_subj, loglike))
 }
 
-
+#' Function: fit_STATIS
+#' Purpose: Estimate TB-STATIS
+#'
 fit_STATIS <- function(data,p_vec,clinical_info, nstart, initial_iter){
-  # clinical_info=D
+
   colnames(clinical_info) <- c("clinical_measure", "event_number", "var_name")
   
   info <- clinical_info %>% dplyr::group_by(clinical_measure) %>% dplyr::summarise(events=dplyr::n())
-  info <- data.frame(info) 
+  info <- data.frame(info)
   colnames(info) <- c("bio", "events")
+  
+  
   #save likelihoods for prelim sequence search
   prelim_like <- vector(mode='list', length=nstart)
   
   #save sequences for prelim sequence search
   prelim_seq <- vector(mode='list', length=nstart)
   all_likes <- data.frame(start=NA, iter=NA,  like=NA)
+  #df of all possible seqs to sample from during likelihood ascent
   add <- possible_seqs(sum(info$events))
   N=dim(info)[1]
   max_like <- rep(NA, nstart)
+  
+  #for each nstart, generate an initial sequence then search for mlseq 
   for(i in 1:nstart){
     
     all_seqs <- vector(mode='list', length=nstart)
-    
+    #get initial seq to start search
     start_seq <- get_seq(clinical_info)
     
     start_group <- get_group(start_seq, add) 
-    #start_group <- start_group %>% arrange(pos)
+    #calc first likelihood 
     current_likelihood <- get_likelihood(data, start_group,p_vec)[[4]]
     
     prelim_like_sub <- matrix(nrow=initial_iter, ncol=2)
@@ -292,18 +276,18 @@ fit_STATIS <- function(data,p_vec,clinical_info, nstart, initial_iter){
     
     current_seq <- start_group
     
-    
+    #for each iteration generate new seq, calculate likelihood and compare to current likelihood, update if new likelihood is greater
     for(j in 1:initial_iter){
       
       #print(j)
       
       bio_info_long <- dplyr::arrange(current_seq, pos)
-      
+      #select state to move
       selected_pos = sample(x = 1:dim(bio_info_long)[1], size  = 1, replace=F)
-      
+      #elig states to swap with
       elig_pos <- sample(x = setdiff(c(1:dim(bio_info_long)[1]), c(selected_pos)), size  = dim(bio_info_long)[1]-1, replace=F)
       
-      
+      #loop through eligible states, select first one that works
       l=0
       for(k in elig_pos){
         l=l+1
@@ -329,19 +313,18 @@ fit_STATIS <- function(data,p_vec,clinical_info, nstart, initial_iter){
         
       }
       
-      #start_group
-      #bio_info_long2
-      #get new group
+
+      #get new group after swapping states
       new <- get_group(bio_info_long2, add) #%>% dplyr::arrange(pos)
       
-      #print(new$sub)
+      #get likelihood 
       all_seqs[[j]] <- new
       temp_likelihood = get_likelihood(data, new,p_vec)[[4]]
       
       
       prelim_like_sub[j,1] <- current_likelihood
       all_likes=rbind(all_likes, data.frame(start=i, iter=j, like=current_likelihood))
-      #print(new)
+ 
       #if current sequence improves likelihood, update current likelihood and sequence
       if(temp_likelihood > current_likelihood){
         
@@ -364,27 +347,27 @@ fit_STATIS <- function(data,p_vec,clinical_info, nstart, initial_iter){
     
   }
   
+  #save ml seq
   ml_seq <- prelim_seq[[which.max(max_like)]]
   
-  #ml_seq <- cbind(ml_seq, event_name=data.frame(event_name=clinical_info$var_name))
-  #ml_seq$est_seq <- ml_seq$sub
-  #ml_seq <- ml_seq %>% dplyr::select(-pos,-order, -sub)
-  
+  #save all likes to plot ascent later
   all_likes <- na.omit(all_likes)
-  #find maximum likelihood and corresponding sequence
-  
+
   return(list(prelim_like=prelim_like, prelim_seq=prelim_seq, ml=max_like, ml_seq=ml_seq, loglikes=all_likes))
   
 }
 
 
-
+#' Function: make_data
+#' Purpose: Generate simulated data set with sample size M, clinical measures in D, and clinical measure accuracies in p.
+#'
 make_data <- function(D, p, M){
+  #get true sequence to generate data from
   seq <- get_seq(D)
   all_seqs  <- possible_seqs(dim(D)[1])
   N= dim(D)[1]
   
-  
+  #get true simultaneous sequence 
   group <- get_group(seq, all_seqs)
   
   #save true order and arrange data frame to be bio, event
@@ -406,7 +389,7 @@ make_data <- function(D, p, M){
   #loop across 1:M
   for(i in 1:M){
     
-    #special case when stage=1, when p=1, all events should = 0
+    #special case when class=1, when p=1, all events should = 0
     if(dat2$stage[i]==1){
       
       for(j in 1:ncol(bio)){
@@ -418,7 +401,7 @@ make_data <- function(D, p, M){
       
     }
     
-    
+    #fill in states that have occurred
     if(dat2$stage[i]!=1){
       
       S_temp <- S %>% dplyr::filter(sub <= (dat2$stage[i])-1)
@@ -430,7 +413,7 @@ make_data <- function(D, p, M){
       
     }
     
-    
+    #fill in events that have not occurred
     for(j in 1:ncol(bio)){
       x<- S$bio[j]
       n <- sum(S$bio==x)
@@ -443,8 +426,8 @@ make_data <- function(D, p, M){
     
   }
   
-  #fill in events that have not occurred
-  
+
+  #order columns and update col names
   dat2 <- dat2[,c(1,2,2+as.numeric(true_order))]
   colnames(dat2)[3:ncol(dat2)] <- paste0("V", 1:(ncol(dat2)-2))
   
