@@ -1,0 +1,21 @@
+#!/bin/bash -l
+
+#Name of the job
+#$ -N trust
+
+#Specify project
+#$ -P cbs 
+
+#Join error and output
+#$ -j y
+
+#Send myself email at end of job
+#$ -m e 
+
+
+
+
+
+
+module load R/4.2.3
+Rscript TRUST_est.R
