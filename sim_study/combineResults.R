@@ -5,7 +5,6 @@
 ## Date: 03/05/2025
 ## Author: Samantha Malatesta
 ##################################################
-
 library(dplyr)
 library(ggplot2)
 library(tidyverse)
@@ -43,7 +42,7 @@ write.csv(dat2, paste0("res_data_8_", Sys.Date(), ".csv"))
 #sequences (N=8)
 seqs2 <-  files_seq[str_detect(files_seq,"_8_")==T] %>% map(readRDS) 
 seqs2 <- data.frame(Reduce(rbind, seqs2))
-write.csv(seqs2, paste0("res_seqs_8_", Sys.Date(), ".csv"))
+write.csv(seqs2, paste0("res_seqs_8_", Sys.Date(), ".csv"), row.names=F)
 
 #data and stages (N=12)
 dat3 <- files_data[str_detect(files_data,"_12_")==T] %>% map(readRDS)
@@ -52,10 +51,11 @@ dat3 <- dat3 %>% na.omit()
 dat3$id=paste(dat3$z, "-", dat3$run)
 write.csv(dat3, paste0("res_data_12_", Sys.Date(), ".csv"))
 
+
 #sequences (N=12)
 seqs3 <-  files_seq[str_detect(files_seq,"_12_")==T] %>% map(readRDS) 
 seqs3 <- data.frame(Reduce(rbind, seqs3))
-write.csv(seqs3, paste0("res_seqs_12_", Sys.Date(), ".csv"))
+write.csv(seqs3, paste0("res_seqs_12_", Sys.Date(), ".csv"), row.names=F)
 
 
 #sensitivity analysis results
@@ -77,7 +77,7 @@ write.csv(dat1, paste0("res_data_4_sens_", Sys.Date(), ".csv"))
 #sequences (N=4)
 seqs1 <-  files_seq[str_detect(files_seq,"_4_")==T] %>% map(readRDS) 
 seqs1 <- data.frame(Reduce(rbind, seqs1)) %>% na.omit()
-write.csv(seqs1, paste0("res_seqs_4_sens_", Sys.Date(), ".csv"))
+write.csv(seqs1, paste0("res_seqs_4_sens_", Sys.Date(), ".csv"), row.names=F)
 
 #data and stages (N=8)
 dat2 <- files_data[str_detect(files_data,"_8_")==T] %>% map(readRDS)
@@ -89,7 +89,7 @@ write.csv(dat2, paste0("res_data_8_sens_", Sys.Date(), ".csv"))
 #sequences (N=8)
 seqs2 <-  files_seq[str_detect(files_seq,"_8_")==T] %>% map(readRDS) 
 seqs2 <- data.frame(Reduce(rbind, seqs2))
-write.csv(seqs2, paste0("res_seqs_8_sens_", Sys.Date(), ".csv"))
+write.csv(seqs2, paste0("res_seqs_8_sens_", Sys.Date(), ".csv"), row.names = F)
 
 #data and stages (N=12)
 dat3 <- files_data[str_detect(files_data,"_12_")==T] %>% map(readRDS)
@@ -101,4 +101,4 @@ write.csv(dat3, paste0("res_data_12_sens_", Sys.Date(), ".csv"))
 #sequences (N=12)
 seqs3 <-  files_seq[str_detect(files_seq,"_12_")==T] %>% map(readRDS) 
 seqs3 <- data.frame(Reduce(rbind, seqs3))
-write.csv(seqs3, paste0("res_seqs_12_sens_", Sys.Date(), ".csv"))
+write.csv(seqs3, paste0("res_seqs_12_sens_", Sys.Date(), ".csv"), row.names=F)

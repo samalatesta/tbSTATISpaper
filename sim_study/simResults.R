@@ -50,7 +50,7 @@ return(list(same_seq, p1))
 
 #generate table for proportion correct sequence
 proptab <- function(data){
-  t1=ggplot(data) + facet_grid(~p+M, labeller =label_both, scales="free_y")+geom_text(data,mapping=aes(y=factor(0), x=factor(0), label=paste0(round(prop, digits=2)), hjust=1, vjust=0.5))+
+  t1=ggplot(data) + facet_grid(~p+M, labeller =label_both, scales="free_y")+geom_text(data,mapping=aes(y=factor(0), x=factor(0), label=paste0(round(prop, digits=2)), hjust=.7, vjust=0.3))+
     ggtitle("Proportion Kendall's Tau Distance Equals 0") + theme_pubr()  +theme(
       axis.line = element_blank(),
       axis.ticks  = element_blank(),
@@ -58,7 +58,7 @@ proptab <- function(data){
       axis.title.x  = element_blank(),
       axis.text.x = element_text(color="white"),
       axis.text.y = element_text(color="white"),
-      plot.title = element_text(size=11)
+      plot.title = element_text(size=14)
     ) +theme(
       strip.text.x = element_text(
         size = 12, color = "black", face = "bold"
@@ -171,13 +171,13 @@ p3= ggplot(propsinfo_no0) + geom_violin(aes(y=dist, x=factor(p), fill=factor(M))
   theme_bw()   + theme(legend.position = "bottom", text=element_text(size=16, color="black"), legend.text = element_text(size=16), axis.text = element_text(color="black")) +ylim(0,1)
 
 p4= ggplot(propsinfo_no0) + geom_density(aes( x=dist), fill="lightblue") + facet_grid(~p+M, labeller =label_both) + coord_flip() +xlab("Kendall's Tau Distance > 0") +
-  ggtitle(paste0(label,") ",N," Clinical States")) + ylab("Density") +
+  ggtitle(paste0("   ",label,") ",N," Clinical States")) + ylab("Density") +
   theme_bw() + xlim(0,1) + theme(text=element_text(size=14, color="black")) +theme(
     strip.text.x = element_text(
       size = 12, color = "black", face = "bold"
     ),strip.background = element_rect(
       color="black", fill="lightgrey", size=1, linetype="solid"
-    ),panel.spacing = unit(0,'lines'),panel.border = element_rect(color = "black", fill = NA, size = 1), plot.title = element_text(hjust = -0.15), axis.text.x = element_blank(), axis.ticks.x = element_blank()
+    ),panel.spacing = unit(0,'lines'),panel.border = element_rect(color = "black", fill = NA, size = 1), plot.title = element_text(hjust = 0), axis.text.x = element_blank(), axis.ticks.x = element_blank()
   )
 
 return(list(props_summary,p1, p2, p3, p4))
