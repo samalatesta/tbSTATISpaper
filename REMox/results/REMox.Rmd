@@ -1,0 +1,230 @@
+---
+title: ''
+output:
+  word_document:
+    toc: true
+    toc_depth: '5'
+  html_document:
+    toc: true
+    toc_depth: 5
+    toc_float: true
+    code_folding: hide
+---
+
+### REMox trial data
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(arsenal)
+library(survival)
+library(tidyverse)
+library(survminer)
+```
+Data from https://c-path.org/tools-platforms/tb-pacts/   
+REMox paper https://www.nejm.org/doi/10.1056/NEJMoa1407426      
+ABSTRACT     
+METHODS     
+We conducted a randomized, double-blind, placebo-controlled, phase 3 trial to test the noninferiority of two moxifloxacin-containing regimens as compared with a control regimen. One group of patients received isoniazid, rifampin, pyrazinamide, and ethambutol for 8 weeks, followed by 18 weeks of isoniazid and rifampin (control group). In the second group, we replaced ethambutol with moxifloxacin for 17 weeks, followed by 9 weeks of placebo (isoniazid group), and in the third group, we replaced isoniazid with moxifloxacin for 17 weeks, followed by 9 weeks of placebo (ethambutol group). The primary end point was treatment failure or relapse within 18 months after randomization.
+     
+RESULTS     
+Of the 1931 patients who underwent randomization, in the per-protocol analysis, a favorable outcome was reported in fewer patients in the isoniazid group (85%) and the ethambutol group (80%) than in the control group (92%), for a difference favoring the control group of 6.1 percentage points (97.5% confidence interval [CI], 1.7 to 10.5) versus the isoniazid group and 11.4 percentage points (97.5% CI, 6.7 to 16.1) versus the ethambutol group. Results were consistent in the modified intention-to-treat analysis and all sensitivity analyses. The hazard ratios for the time to culture negativity in both solid and liquid mediums for the isoniazid and ethambutol groups, as compared with the control group, ranged from 1.17 to 1.25, indicating a shorter duration, with the lower bounds of the 95% confidence intervals exceeding 1.00 in all cases. There was no significant difference in the incidence of grade 3 or 4 adverse events, with events reported in 127 patients (19%) in the isoniazid group, 111 (17%) in the ethambutol group, and 123 (19%) in the control group.
+    
+```{r read in data}
+#### Data management/pre-processing
+#path to data folder
+path<- "/usr3/graduate/samalate/projectnb/cbs/samalate/tbSTATISpaper/REMox/data"
+
+#demographic data
+dm <- read.csv(paste0(path, "/dm.csv")) %>% dplyr::filter(STUDYID == "TB-1021" & PPDISP=="6.0 ASSESSABLE")
+
+#clinical events, repeating per study visit (VISIT) and clinical event (CETERM) 
+ce <-read.csv(paste0(path, "/ce.csv")) %>% dplyr::filter(USUBJID %in% dm$USUBJID & VISIT=="BASELINE")
+
+#laboratory tests
+lb <-read.csv(paste0(path, "/lb.csv")) %>% dplyr::filter(USUBJID %in% dm$USUBJID)
+
+#respiratory findings
+re <-read.csv(paste0(path, "/re.csv")) %>% dplyr::filter(USUBJID %in% dm$USUBJID)
+
+#vital signs
+vs <-read.csv(paste0(path, "/vs.csv")) %>% dplyr::filter(USUBJID %in% dm$USUBJID)
+
+#outcomes 
+xo <-read.csv(paste0(path, "/xo.csv")) %>% dplyr::filter(USUBJID %in% dm$USUBJID)
+
+#microbiology
+mb <-read.csv(paste0(path, "/mb.csv")) %>% dplyr::filter(USUBJID %in% dm$USUBJID & VISIT %in% c("BASELINE", "SCREENING"))
+```
+
+
+```{r filter and select vars}
+####baseline characteristics/comorbidities####
+
+#select vars in demo data
+dm2 <- dm %>% dplyr::select(USUBJID, AGE, SEX, RACE, COUNTRY, ARM)
+
+#select vars in demo data
+hiv <- lb %>% dplyr::filter( VISIT=="SCREENING" & LBTEST=="HIV Test" & LBTSTDTL=="Overall Test Result") %>% dplyr::select(USUBJID,  HIV=LBORRES)
+
+weight <- vs %>% dplyr::filter( VISIT=="BASELINE" & VSTEST == "Weight" ) %>% dplyr::select(USUBJID, WT= VSORRES)
+
+####symptoms####
+
+#cough
+cough <- ce %>% dplyr::filter(CETERM=="COUGH") %>% dplyr::select(USUBJID, COUGH= CEOCCUR)
+
+#fever
+fever <- ce %>% dplyr::filter(CETERM=="FEVER") %>% dplyr::select(USUBJID, FEVER= CEOCCUR)
+
+#wtloss
+wtloss <- ce %>% dplyr::filter(CETERM=="UNINTENTIONAL WEIGHT LOSS") %>% dplyr::select(USUBJID, WTLOSS= CEOCCUR)
+
+#hemop
+hemop <- ce %>% dplyr::filter(CETERM=="HEMOPTYSIS") %>% dplyr::select(USUBJID, HEMOPTYSIS= CEOCCUR)
+
+#sweats
+sweats <- ce %>% dplyr::filter(CETERM=="NIGHT SWEATS") %>% dplyr::select(USUBJID, SWEATS= CEOCCUR)
+
+####MICROBIO####
+
+#smear 
+smear <- mb %>% dplyr::filter(MBTSTDTL== "Categorical Count" & VISIT == "BASELINE") %>% dplyr::select(USUBJID, SMEAR=MBSTRESC)
+
+#culture and TTP
+ttp <- mb %>% dplyr::filter(MBTSTDTL=="Time to Detection" ) %>% dplyr::select(USUBJID, VISIT, TTP=MBSTRESN, TTPCAT=MBSTRESC)
+
+contam <- mb %>% dplyr::filter(MBTEST=="Non-M. tuberculosis Bacteria") %>% dplyr::select(USUBJID,VISIT, NTM=MBORRES)
+
+sputum <- dplyr::left_join(ttp, contam, by = c("USUBJID", "VISIT"))
+
+sputum$TTP2 <- ifelse(sputum$TTPCAT==">42", "Negative", sputum$TTP)
+
+sputum$TTP2[sputum$NTM %in% c("POSITIVE (CONTAMINATED)", "OTHER")] <- NA
+
+sputum <- sputum %>% dplyr::filter(is.na(TTP2)==F) %>% dplyr::group_by(USUBJID) %>% dplyr::arrange(VISIT) %>% dplyr::filter(row_number()==1) %>% dplyr::select(USUBJID, TTP2, TTP)
+
+####CXR####
+cav <- re %>% dplyr::select(USUBJID, CAV= REORRES)
+
+####OUTCOMES####
+
+#currently using per-protocol 
+#time to culture negative
+tcc <- xo %>% dplyr::filter(XOCAT=="PER PROTCOL" & XOTEST == "Time to Culture Negative Status" & XOMETHOD == "LIQUID CULTURE" ) %>% dplyr::select(USUBJID, TCC=XOSTRESC)
+
+#primary efficacy outcome (TB free at 18 mos)
+prim <- xo %>% dplyr::filter(XOCAT=="PER PROTCOL" & XOTEST == "Time to Primary Efficacy Endpoint" ) %>% dplyr::select(USUBJID, TIME_PRIME=XOORRES)
+
+prim2 <- xo %>% dplyr::filter(XOCAT=="PER PROTCOL" & XOTEST == "Primary Efficacy Results" & XOMETHOD == "LIQUID CULTURE") %>% dplyr::select(USUBJID, PRIME=XOORRES)
+```
+
+```{r merge to one wide data set}
+
+list_df = list(dm2, hiv,weight, cough, fever, wtloss, sweats, hemop, cav, smear,sputum, tcc, prim2, prim )
+
+df2 <- list_df %>% reduce(full_join, by='USUBJID') %>% dplyr::distinct(USUBJID, .keep_all=T)
+```
+
+```{r}
+##### More data cleaning 
+
+#categorize weight
+df2$WT <- as.numeric(df2$WT)
+df2$WTCAT <- ifelse(df2$WT < 40, 1, ifelse(df2$WT <= 55, 2, ifelse(df2$WT <=75, 3 , ifelse(df2$WT > 75, 4, NA ))))
+
+#categorize age 
+df2$AGECAT <- ifelse(df2$AGE < 25, 1, ifelse(df2$AGE <= 35, 2, ifelse(df2$AGE > 35, 3 , NA)))
+
+#factor variables 
+yn_factor <- function(var=vector()){
+  var_factor <- factor(var, levels = c("Y", "N"), labels = c("Yes", "No"))
+}
+
+df2$COUGH <- yn_factor(df2$COUGH)
+df2$SWEATS <- yn_factor(df2$SWEATS)
+df2$FEVER <- yn_factor(df2$FEVER)
+df2$WTLOSS <- yn_factor(df2$WTLOSS)
+df2$HEMOPTYSIS <- yn_factor(df2$HEMOPTYSIS)
+df2$CAV <- yn_factor(df2$CAV)
+df2$SMEAR <- factor(df2$SMEAR, levels = c("4+", "3+", "2+", "1+", "NEGATIVE"), labels=c("4+", "3+", "2+", "1+", "Negative"))
+df2$AGECAT <- factor(df2$AGECAT, levels = c(1,2,3), labels = c("< 25", "25-35", ">35"))
+df2$WTCAT <- factor(df2$WTCAT, levels = c(1,2,3,4), labels = c("< 40", "40-55", "> 55 - 75", "> 75"))
+df2$TTPCAT <- ifelse(df2$TTP2=="Negative", "Negative", ifelse(df2$TTP>=5, ">=5 days", ifelse(df2$TTP<5, "<5 days", NA)))
+df2$PRIME <- factor(df2$PRIME, levels = c("FAVOURABLE", "UNFAVOURABLE", "UNASSESSABLE"), labels = c("Favorable", "Unfavorable", NA))
+
+```
+
+
+### Cohort Summary     
+* TTP - 84 from screening and not baseline
+```{r cohort summary, results = 'asis'}
+controls1 <- tableby.control(
+  test = F,
+  total = F,
+  numeric.stats = c("medianq1q3", "Nmiss"),
+  cat.stats = c("countpct", "Nmiss"),
+  stats.labels = list(
+    medianq1q3 = "Median (Q1, Q3)",
+    Nmiss = "Missing"
+  ),
+  cat.test = "chisq",
+  numeric.test = "anova",
+  digits = 0L
+)
+
+     df2%>%     tableby( ~ ARM + AGECAT + SEX + RACE + COUNTRY + HIV  + WTCAT + COUGH + HEMOPTYSIS + WTLOSS + FEVER +SWEATS + SMEAR + TTPCAT+ CAV + PRIME
+                     , data = ., control = controls1)  %>% set_labels(c( ARM = "Treatment Arm", AGECAT = "Age", SEX = "Assigned Sex", RACE = "Race", COUNTRY = "Country", HIV = "HIV", WTCAT = "Weight (kg)", COUGH="Cough", HEMOPTYSIS = "Hemoptysis", WTLOSS = "Unexplained weightloss", FEVER="Fever", SWEATS = "Sweats", SMEAR = "AFB Smear", TTPCAT="Time to positivity (days)", CAV="Cavitation", PRIME = "Primary Outcome")) %>% summary() 
+```
+
+
+### Cohort Summary (complete data)
+```{r cohort summary no missing, results = 'asis'}
+controls1 <- tableby.control(
+  test = F,
+  total = F,
+  numeric.stats = c("medianq1q3", "Nmiss"),
+  cat.stats = c("countpct", "Nmiss"),
+  stats.labels = list(
+    medianq1q3 = "Median (Q1, Q3)",
+    Nmiss = "Missing"
+  ),
+  cat.test = "chisq",
+  numeric.test = "anova",
+  digits = 0L
+)
+
+df3 <- df2 %>% dplyr::filter(is.na(CAV)==F & is.na(SMEAR)==F  )
+
+     df3%>%     tableby( ~ ARM + AGECAT + SEX + RACE + COUNTRY + HIV  + WTCAT + COUGH + HEMOPTYSIS + WTLOSS + FEVER +SWEATS + SMEAR + TTPCAT+ CAV + PRIME
+                     , data = ., control = controls1)  %>% set_labels(c( ARM = "Treatment Arm", AGECAT = "Age", SEX = "Assigned Sex", RACE = "Race", COUNTRY = "Country", HIV = "HIV", WTCAT = "Weight (kg)", COUGH="Cough", HEMOPTYSIS = "Hemoptysis", WTLOSS = "Unexplained weightloss", FEVER="Fever", SWEATS = "Sweats", SMEAR = "AFB Smear", TTPCAT="Time to positivity (days)", CAV="Cavitation", PRIME = "Primary Outcome")) %>% summary() 
+```
+
+##### Prep data for model run and export
+```{r prep data for model run}
+yn_bin <- function(var=vector()){
+  var_bin <- ifelse(var=="Yes", 1, ifelse(var=="No", 0, NA))
+}
+
+df5 <- df3  
+
+df6 <- df5 %>% dplyr::mutate(across(c("COUGH", "FEVER", "WTLOSS", "SWEATS","HEMOPTYSIS", "CAV"), yn_bin))
+
+df6$CULTPOS <- ifelse(df6$TTPCAT=="Negative", 0, 1)
+df6$TTPLT5 <- ifelse(df6$TTPCAT=="<5 days", 1, 0)
+
+df6$SMEAR1 <- 0
+df6$SMEAR2 <- 0
+df6$SMEAR3 <- 0
+df6$SMEAR4 <- 0  
+
+df6$SMEAR1 <- ifelse(df6$SMEAR %in% c("1+","2+", "3+", "4+"), 1, 0)
+df6$SMEAR2 <- ifelse(df6$SMEAR %in% c("2+", "3+", "4+"), 1, 0)
+df6$SMEAR3 <- ifelse(df6$SMEAR %in% c("3+", "4+"), 1, 0)
+df6$SMEAR4 <- ifelse(df6$SMEAR %in% c("4+"), 1, 0)
+
+df6 <- df6  %>% dplyr::select(USUBJID, COUGH, FEVER, WTLOSS, SWEATS,HEMOPTYSIS,SMEAR1, SMEAR2, SMEAR3, SMEAR4, CAV, TTPLT5, TCC, PRIME,TIME_PRIME, ARM, AGECAT, SEX, HIV, CULTPOS)
+
+head(df6)
+
+write.csv(df6, paste0(path, "/REMox_data.csv"), row.names = F)
+```

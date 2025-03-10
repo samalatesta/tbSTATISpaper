@@ -1,0 +1,19 @@
+#!/bin/bash -l
+
+#Name of the job
+#$ -N REMoxboot
+
+#Specify project
+#$ -P cbs 
+
+#Join error and output
+#$ -j y
+
+#Send myself email at end of job
+#$ -m e 
+
+#This line runs the set of nSim simulations this many times
+#$ -t 61-70
+
+module load R/4.2.3
+time Rscript REMox_bootstrap.R
