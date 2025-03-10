@@ -1,0 +1,22 @@
+#!/bin/bash -l
+
+# Project name
+#$ -P cbs
+
+#Time limit
+#$ -l h_rt=24:00:00
+
+#Name a job
+#-N Sim8states_sens
+ 
+#join error and output stream
+#$ -j y
+
+#Send email when job ends or aborts
+#$-m e
+
+#This line runs the set of nSim simulations this many times
+#$-t 1-50
+
+module load R/4.2.1
+time Rscript runSimsens.R $1 $2 $3 $4 $5
